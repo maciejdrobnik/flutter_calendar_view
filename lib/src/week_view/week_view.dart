@@ -109,6 +109,9 @@ class WeekView<T extends Object?> extends StatefulWidget {
   /// Width of time line.
   final double? timeLineWidth;
 
+  /// Flag to show vertical lines
+  final bool showVerticalLine;
+
   /// Flag to show live time indicator in all day or only [initialDay]
   final bool showLiveTimeLineInAllDays;
 
@@ -205,6 +208,7 @@ class WeekView<T extends Object?> extends StatefulWidget {
     this.hourIndicatorSettings,
     this.timeLineBuilder,
     this.timeLineWidth,
+    this.showVerticalLine = true,
     this.liveTimeIndicatorSettings,
     this.onPageChange,
     this.weekPageHeaderBuilder,
@@ -301,7 +305,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
     _regulateCurrentDate();
 
     _calculateHeights();
-    _scrollController = ScrollController(initialScrollOffset: widget.scrollOffset);
+    _scrollController = widget.scrollController ?? ScrollController(initialScrollOffset: widget.scrollOffset);
     _pageController = PageController(initialPage: _currentIndex);
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
 
@@ -417,7 +421,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                             timeLineOffset: widget.timeLineOffset,
                             timeLineWidth: _timeLineWidth,
                             verticalLineOffset: 0,
-                            showVerticalLine: true,
+                            showVerticalLine: widget.showVerticalLine,
                             controller: controller,
                             hourHeight: _hourHeight,
                             scrollController: scrollController,
