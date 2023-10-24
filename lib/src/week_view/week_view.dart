@@ -309,7 +309,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
 
     _calculateHeights();
     _scrollController = widget.scrollController ?? ScrollController(initialScrollOffset: widget.scrollOffset);
-    _pageController = widget.pageController ?? PageController(initialPage: _currentIndex);
+    _pageController = PageController(initialPage: _currentIndex);
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
 
     _assignBuilders();
@@ -353,7 +353,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
       _setDateRange();
       _regulateCurrentDate();
 
-      _pageController.jumpToPage(_currentIndex);
+      widget.pageController ?? _pageController.jumpToPage(_currentIndex);
     }
 
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
@@ -368,6 +368,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
   @override
   void dispose() {
     _controller?.removeListener(_reloadCallback);
+    widget.pageController?.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -394,7 +395,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                     width: _width,
                     child: PageView.builder(
                       itemCount: _totalWeeks,
-                      controller: _pageController,
+                      controller: widget.pageController ?? _pageController,
                       onPageChanged: _onPageChange,
                       itemBuilder: (_, index) {
                         final dates =
@@ -729,10 +730,11 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
   /// as [DayView.pageTransitionDuration] and [DayView.pageTransitionCurve]
   /// respectively.
   void nextPage({Duration? duration, Curve? curve}) {
-    _pageController.nextPage(
-      duration: duration ?? widget.pageTransitionDuration,
-      curve: curve ?? widget.pageTransitionCurve,
-    );
+    widget.pageController ??
+        _pageController.nextPage(
+          duration: duration ?? widget.pageTransitionDuration,
+          curve: curve ?? widget.pageTransitionCurve,
+        );
   }
 
   /// Animate to previous page
@@ -741,16 +743,17 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
   /// as [DayView.pageTransitionDuration] and [DayView.pageTransitionCurve]
   /// respectively.
   void previousPage({Duration? duration, Curve? curve}) {
-    _pageController.previousPage(
-      duration: duration ?? widget.pageTransitionDuration,
-      curve: curve ?? widget.pageTransitionCurve,
-    );
+    widget.pageController ??
+        _pageController.previousPage(
+          duration: duration ?? widget.pageTransitionDuration,
+          curve: curve ?? widget.pageTransitionCurve,
+        );
   }
 
   /// Jumps to page number [page]
   ///
   ///
-  void jumpToPage(int page) => _pageController.jumpToPage(page);
+  void jumpToPage(int page) => widget.pageController ?? _pageController.jumpToPage(page);
 
   /// Animate to page number [page].
   ///
@@ -758,7 +761,8 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
   /// as [DayView.pageTransitionDuration] and [DayView.pageTransitionCurve]
   /// respectively.
   Future<void> animateToPage(int page, {Duration? duration, Curve? curve}) async {
-    await _pageController.animateToPage(page, duration: duration ?? widget.pageTransitionDuration, curve: curve ?? widget.pageTransitionCurve);
+    await widget.pageController ??
+        _pageController.animateToPage(page, duration: duration ?? widget.pageTransitionDuration, curve: curve ?? widget.pageTransitionCurve);
   }
 
   /// Returns current page number.
@@ -769,7 +773,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
     if (week.isBefore(_minDate) || week.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    _pageController.jumpToPage(_minDate.getWeekDifference(week, start: widget.startDay));
+    widget.pageController ?? _pageController.jumpToPage(_minDate.getWeekDifference(week, start: widget.startDay));
   }
 
   /// Animate to page which gives day calendar for [week].
@@ -781,11 +785,12 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
     if (week.isBefore(_minDate) || week.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    await _pageController.animateToPage(
-      _minDate.getWeekDifference(week, start: widget.startDay),
-      duration: duration ?? widget.pageTransitionDuration,
-      curve: curve ?? widget.pageTransitionCurve,
-    );
+    await widget.pageController ??
+        _pageController.animateToPage(
+          _minDate.getWeekDifference(week, start: widget.startDay),
+          duration: duration ?? widget.pageTransitionDuration,
+          curve: curve ?? widget.pageTransitionCurve,
+        );
   }
 
   /// Returns the current visible week's first date.
