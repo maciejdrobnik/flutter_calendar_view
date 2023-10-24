@@ -102,6 +102,8 @@ class WeekView<T extends Object?> extends StatefulWidget {
   /// the same hour as previous page
   final ScrollController? scrollController;
 
+  final PageController? pageController;
+
   /// Defines height occupied by one minute of time span. This parameter will
   /// be used to calculate total height of Week view.
   final double heightPerMinute;
@@ -194,6 +196,7 @@ class WeekView<T extends Object?> extends StatefulWidget {
   const WeekView({
     Key? key,
     this.controller,
+    this.pageController,
     this.scrollController,
     this.eventTileBuilder,
     this.pageTransitionDuration = const Duration(milliseconds: 300),
@@ -306,7 +309,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
 
     _calculateHeights();
     _scrollController = widget.scrollController ?? ScrollController(initialScrollOffset: widget.scrollOffset);
-    _pageController = PageController(initialPage: _currentIndex);
+    _pageController = widget.pageController ?? PageController(initialPage: _currentIndex);
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
 
     _assignBuilders();
