@@ -106,6 +106,8 @@ class MonthView<T extends Object?> extends StatefulWidget {
   /// [CalendarControllerProvider.controller].
   final EventController<T>? controller;
 
+  final PageController? pageController;
+
   /// Defines width of default border
   ///
   /// Default value is 1
@@ -147,6 +149,7 @@ class MonthView<T extends Object?> extends StatefulWidget {
     this.minMonth,
     this.maxMonth,
     this.controller,
+    this.pageController,
     this.initialMonth,
     this.borderSize = 1,
     this.useAvailableVerticalSpace = false,
@@ -183,7 +186,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
 
   int _totalMonths = 0;
 
-  late PageController _pageController;
+  PageController? _pageController;
 
   late double _width;
   late double _height;
@@ -215,7 +218,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
     _regulateCurrentDate();
 
     // Initialize page controller to control page actions.
-    _pageController = PageController(initialPage: _currentIndex);
+    if (widget.pageController == null) _pageController = PageController(initialPage: _currentIndex);
 
     _assignBuilders();
   }
@@ -224,8 +227,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final newController = widget.controller ??
-        CalendarControllerProvider.of<T>(context).controller;
+    final newController = widget.controller ?? CalendarControllerProvider.of<T>(context).controller;
 
     if (newController != _controller) {
       _controller = newController;
@@ -246,8 +248,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   void didUpdateWidget(MonthView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update controller.
-    final newController = widget.controller ??
-        CalendarControllerProvider.of<T>(context).controller;
+    final newController = widget.controller ?? CalendarControllerProvider.of<T>(context).controller;
 
     if (newController != _controller) {
       _controller?.removeListener(_reloadCallback);
@@ -256,12 +257,11 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
     }
 
     // Update date range.
-    if (widget.minMonth != oldWidget.minMonth ||
-        widget.maxMonth != oldWidget.maxMonth) {
+    if (widget.minMonth != oldWidget.minMonth || widget.maxMonth != oldWidget.maxMonth) {
       _setDateRange();
       _regulateCurrentDate();
 
-      _pageController.jumpToPage(_currentIndex);
+      (widget.pageController ?? _pageController)?.jumpToPage(_currentIndex);
     }
 
     // Update builders and callbacks
@@ -273,7 +273,8 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   @override
   void dispose() {
     _controller?.removeListener(_reloadCallback);
-    _pageController.dispose();
+    widget.pageController?.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
@@ -292,7 +293,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
             ),
             Expanded(
               child: PageView.builder(
-                controller: _pageController,
+                controller: widget.pageController ?? _pageController,
                 onPageChanged: _onPageChange,
                 itemBuilder: (_, index) {
                   final date = DateTime(_minDate.year, _minDate.month + index);
@@ -310,8 +311,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
                             (index) => Expanded(
                               child: SizedBox(
                                 width: _cellWidth,
-                                child:
-                                    _weekBuilder(weekDays[index].weekday - 1),
+                                child: _weekBuilder(weekDays[index].weekday - 1),
                               ),
                             ),
                           ),
@@ -319,12 +319,11 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
                       ),
                       Expanded(
                         child: LayoutBuilder(builder: (context, constraints) {
-                          final _cellAspectRatio =
-                              widget.useAvailableVerticalSpace
-                                  ? calculateCellAspectRatio(
-                                      constraints.maxHeight,
-                                    )
-                                  : widget.cellAspectRatio;
+                          final _cellAspectRatio = widget.useAvailableVerticalSpace
+                              ? calculateCellAspectRatio(
+                                  constraints.maxHeight,
+                                )
+                              : widget.cellAspectRatio;
 
                           return SizedBox(
                             height: _height,
@@ -489,8 +488,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   }
 
   /// Default cell builder. Used when [widget.cellBuilder] is null
-  Widget _defaultCellBuilder(
-      date, List<CalendarEventData<T>> events, isToday, isInMonth) {
+  Widget _defaultCellBuilder(date, List<CalendarEventData<T>> events, isToday, isInMonth) {
     return FilledCell<T>(
       date: date,
       shouldHighlight: isToday,
@@ -507,7 +505,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   /// as [MonthView.pageTransitionDuration] and [MonthView.pageTransitionCurve]
   /// respectively.
   void nextPage({Duration? duration, Curve? curve}) {
-    _pageController.nextPage(
+    (widget.pageController ?? _pageController)?.nextPage(
       duration: duration ?? widget.pageTransitionDuration,
       curve: curve ?? widget.pageTransitionCurve,
     );
@@ -519,7 +517,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   /// as [MonthView.pageTransitionDuration] and [MonthView.pageTransitionCurve]
   /// respectively.
   void previousPage({Duration? duration, Curve? curve}) {
-    _pageController.previousPage(
+    (widget.pageController ?? _pageController)?.previousPage(
       duration: duration ?? widget.pageTransitionDuration,
       curve: curve ?? widget.pageTransitionCurve,
     );
@@ -527,7 +525,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
 
   /// Jumps to page number [page]
   void jumpToPage(int page) {
-    _pageController.jumpToPage(page);
+    (widget.pageController ?? _pageController)?.jumpToPage(page);
   }
 
   /// Animate to page number [page].
@@ -535,11 +533,9 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   /// Arguments [duration] and [curve] will override default values provided
   /// as [MonthView.pageTransitionDuration] and [MonthView.pageTransitionCurve]
   /// respectively.
-  Future<void> animateToPage(int page,
-      {Duration? duration, Curve? curve}) async {
-    await _pageController.animateToPage(page,
-        duration: duration ?? widget.pageTransitionDuration,
-        curve: curve ?? widget.pageTransitionCurve);
+  Future<void> animateToPage(int page, {Duration? duration, Curve? curve}) async {
+    await (widget.pageController ?? _pageController)
+        ?.animateToPage(page, duration: duration ?? widget.pageTransitionDuration, curve: curve ?? widget.pageTransitionCurve);
   }
 
   /// Returns current page number.
@@ -550,7 +546,7 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
     if (month.isBefore(_minDate) || month.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    _pageController.jumpToPage(_minDate.getMonthDifference(month) - 1);
+    (widget.pageController ?? _pageController)?.jumpToPage(_minDate.getMonthDifference(month) - 1);
   }
 
   /// Animate to page which gives month calendar for [month].
@@ -558,12 +554,11 @@ class MonthViewState<T extends Object?> extends State<MonthView<T>> {
   /// Arguments [duration] and [curve] will override default values provided
   /// as [MonthView.pageTransitionDuration] and [MonthView.pageTransitionCurve]
   /// respectively.
-  Future<void> animateToMonth(DateTime month,
-      {Duration? duration, Curve? curve}) async {
+  Future<void> animateToMonth(DateTime month, {Duration? duration, Curve? curve}) async {
     if (month.isBefore(_minDate) || month.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    await _pageController.animateToPage(
+    await (widget.pageController ?? _pageController)?.animateToPage(
       _minDate.getMonthDifference(month) - 1,
       duration: duration ?? widget.pageTransitionDuration,
       curve: curve ?? widget.pageTransitionCurve,

@@ -104,6 +104,8 @@ class DayView<T extends Object?> extends StatefulWidget {
   /// for particular day.
   final EventController<T>? controller;
 
+  final PageController? pageController;
+
   /// Defines height occupied by one minute of interval.
   /// This will be used to calculate total height of day view.
   final double heightPerMinute;
@@ -195,6 +197,7 @@ class DayView<T extends Object?> extends StatefulWidget {
     this.dateStringBuilder,
     this.timeStringBuilder,
     this.controller,
+    this.pageController,
     this.showVerticalLine = true,
     this.pageTransitionDuration = const Duration(milliseconds: 300),
     this.pageTransitionCurve = Curves.ease,
@@ -228,14 +231,10 @@ class DayView<T extends Object?> extends StatefulWidget {
     this.showHalfHours = false,
     this.halfHourIndicatorSettings,
     this.startDuration = const Duration(hours: 0),
-  })  : assert(timeLineOffset >= 0,
-            "timeLineOffset must be greater than or equal to 0"),
-        assert(width == null || width > 0,
-            "Calendar width must be greater than 0."),
-        assert(timeLineWidth == null || timeLineWidth > 0,
-            "Time line width must be greater than 0."),
-        assert(
-            heightPerMinute > 0, "Height per minute must be greater than 0."),
+  })  : assert(timeLineOffset >= 0, "timeLineOffset must be greater than or equal to 0"),
+        assert(width == null || width > 0, "Calendar width must be greater than 0."),
+        assert(timeLineWidth == null || timeLineWidth > 0, "Time line width must be greater than 0."),
+        assert(heightPerMinute > 0, "Height per minute must be greater than 0."),
         assert(
           dayDetectorBuilder == null || onDateLongPress == null,
           """If you use [dayPressDetectorBuilder]
@@ -264,7 +263,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   late HourIndicatorSettings _halfHourIndicatorSettings;
   late HourIndicatorSettings _liveTimeIndicatorSettings;
 
-  late PageController _pageController;
+  PageController? _pageController;
 
   late DateWidgetBuilder _timeLineBuilder;
 
@@ -298,9 +297,8 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     _regulateCurrentDate();
 
     _calculateHeights();
-    _scrollController =
-        ScrollController(initialScrollOffset: widget.scrollOffset);
-    _pageController = PageController(initialPage: _currentIndex);
+    _scrollController = ScrollController(initialScrollOffset: widget.scrollOffset);
+    if (widget.pageController == null) _pageController = PageController(initialPage: _currentIndex);
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
     _assignBuilders();
   }
@@ -309,8 +307,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final newController = widget.controller ??
-        CalendarControllerProvider.of<T>(context).controller;
+    final newController = widget.controller ?? CalendarControllerProvider.of<T>(context).controller;
 
     if (newController != _controller) {
       _controller = newController;
@@ -333,8 +330,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   void didUpdateWidget(DayView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update controller.
-    final newController = widget.controller ??
-        CalendarControllerProvider.of<T>(context).controller;
+    final newController = widget.controller ?? CalendarControllerProvider.of<T>(context).controller;
 
     if (newController != _controller) {
       _controller?.removeListener(_reloadCallback);
@@ -343,12 +339,11 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     }
 
     // Update date range.
-    if (widget.minDay != oldWidget.minDay ||
-        widget.maxDay != oldWidget.maxDay) {
+    if (widget.minDay != oldWidget.minDay || widget.maxDay != oldWidget.maxDay) {
       _setDateRange();
       _regulateCurrentDate();
 
-      _pageController.jumpToPage(_currentIndex);
+      (widget.pageController ?? _pageController)?.jumpToPage(_currentIndex);
     }
 
     _eventArranger = widget.eventArranger ?? SideEventArranger<T>();
@@ -363,7 +358,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   @override
   void dispose() {
     _controller?.removeListener(_reloadCallback);
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
@@ -389,19 +384,16 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
                     child: PageView.builder(
                       physics: widget.pageViewPhysics,
                       itemCount: _totalDays,
-                      controller: _pageController,
+                      controller: widget.pageController ?? _pageController,
                       onPageChanged: _onPageChange,
                       itemBuilder: (_, index) {
-                        final date = DateTime(_minDate.year, _minDate.month,
-                            _minDate.day + index);
+                        final date = DateTime(_minDate.year, _minDate.month, _minDate.day + index);
                         return ValueListenableBuilder(
                           valueListenable: _scrollConfiguration,
                           builder: (_, __, ___) => InternalDayViewPage<T>(
-                            key: ValueKey(
-                                _hourHeight.toString() + date.toString()),
+                            key: ValueKey(_hourHeight.toString() + date.toString()),
                             width: _width,
-                            liveTimeIndicatorSettings:
-                                _liveTimeIndicatorSettings,
+                            liveTimeIndicatorSettings: _liveTimeIndicatorSettings,
                             timeLineBuilder: _timeLineBuilder,
                             dayDetectorBuilder: _dayDetectorBuilder,
                             eventTileBuilder: _eventTileBuilder,
@@ -411,8 +403,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
                             onTileTap: widget.onEventTap,
                             onDateLongPress: widget.onDateLongPress,
                             onDateTap: widget.onDateTap,
-                            showLiveLine: widget.showLiveTimeLineInAllDays ||
-                                date.compareWithoutTime(DateTime.now()),
+                            showLiveLine: widget.showLiveTimeLineInAllDays || date.compareWithoutTime(DateTime.now()),
                             timeLineOffset: widget.timeLineOffset,
                             timeLineWidth: _timeLineWidth,
                             verticalLineOffset: widget.verticalLineOffset,
@@ -426,8 +417,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
                             fullDayEventBuilder: _fullDayEventBuilder,
                             scrollController: _scrollController,
                             showHalfHours: widget.showHalfHours,
-                            halfHourIndicatorSettings:
-                                _halfHourIndicatorSettings,
+                            halfHourIndicatorSettings: _halfHourIndicatorSettings,
                           ),
                         );
                       },
@@ -473,8 +463,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
           offset: 5 + widget.verticalLineOffset,
         );
 
-    assert(_liveTimeIndicatorSettings.height < _hourHeight,
-        "liveTimeIndicator height must be less than minuteHeight * 60");
+    assert(_liveTimeIndicatorSettings.height < _hourHeight, "liveTimeIndicator height must be less than minuteHeight * 60");
 
     _hourIndicatorSettings = widget.hourIndicatorSettings ??
         HourIndicatorSettings(
@@ -483,8 +472,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
           offset: 5,
         );
 
-    assert(_hourIndicatorSettings.height < _hourHeight,
-        "hourIndicator height must be less than minuteHeight * 60");
+    assert(_hourIndicatorSettings.height < _hourHeight, "hourIndicator height must be less than minuteHeight * 60");
 
     _halfHourIndicatorSettings = widget.halfHourIndicatorSettings ??
         HourIndicatorSettings(
@@ -493,8 +481,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
           offset: 5,
         );
 
-    assert(_halfHourIndicatorSettings.height < _hourHeight,
-        "halfHourIndicator height must be less than minuteHeight * 60");
+    assert(_halfHourIndicatorSettings.height < _hourHeight, "halfHourIndicator height must be less than minuteHeight * 60");
   }
 
   void _calculateHeights() {
@@ -506,10 +493,8 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     _timeLineBuilder = widget.timeLineBuilder ?? _defaultTimeLineBuilder;
     _eventTileBuilder = widget.eventTileBuilder ?? _defaultEventTileBuilder;
     _dayTitleBuilder = widget.dayTitleBuilder ?? _defaultDayBuilder;
-    _fullDayEventBuilder =
-        widget.fullDayEventBuilder ?? _defaultFullDayEventBuilder;
-    _dayDetectorBuilder =
-        widget.dayDetectorBuilder ?? _defaultPressDetectorBuilder;
+    _fullDayEventBuilder = widget.fullDayEventBuilder ?? _defaultFullDayEventBuilder;
+    _dayDetectorBuilder = widget.dayDetectorBuilder ?? _defaultPressDetectorBuilder;
   }
 
   /// Sets the current date of this month.
@@ -599,8 +584,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// Default timeline builder this builder will be used if
   /// [widget.eventTileBuilder] is null
   ///
-  Widget _defaultTimeLineBuilder(date) => DefaultTimeLineMark(
-      date: date, timeStringBuilder: widget.timeStringBuilder);
+  Widget _defaultTimeLineBuilder(date) => DefaultTimeLineMark(date: date, timeStringBuilder: widget.timeStringBuilder);
 
   /// Default timeline builder. This builder will be used if
   /// [widget.eventTileBuilder] is null
@@ -652,9 +636,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     );
   }
 
-  Widget _defaultFullDayEventBuilder(
-          List<CalendarEventData<T>> events, DateTime date) =>
-      FullDayEventView(events: events, date: date);
+  Widget _defaultFullDayEventBuilder(List<CalendarEventData<T>> events, DateTime date) => FullDayEventView(events: events, date: date);
 
   /// Called when user change page using any gesture or inbuilt functions.
   ///
@@ -680,7 +662,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// respectively.
   ///
   ///
-  void nextPage({Duration? duration, Curve? curve}) => _pageController.nextPage(
+  void nextPage({Duration? duration, Curve? curve}) => (widget.pageController ?? _pageController)?.nextPage(
         duration: duration ?? widget.pageTransitionDuration,
         curve: curve ?? widget.pageTransitionCurve,
       );
@@ -692,8 +674,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// respectively.
   ///
   ///
-  void previousPage({Duration? duration, Curve? curve}) =>
-      _pageController.previousPage(
+  void previousPage({Duration? duration, Curve? curve}) => (widget.pageController ?? _pageController)?.previousPage(
         duration: duration ?? widget.pageTransitionDuration,
         curve: curve ?? widget.pageTransitionCurve,
       );
@@ -701,7 +682,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// Jumps to page number [page]
   ///
   ///
-  void jumpToPage(int page) => _pageController.jumpToPage(page);
+  void jumpToPage(int page) => (widget.pageController ?? _pageController)?.jumpToPage(page);
 
   /// Animate to page number [page].
   ///
@@ -710,10 +691,8 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// respectively.
   ///
   ///
-  Future<void> animateToPage(int page, {Duration? duration, Curve? curve}) =>
-      _pageController.animateToPage(page,
-          duration: duration ?? widget.pageTransitionDuration,
-          curve: curve ?? widget.pageTransitionCurve);
+  Future<void> animateToPage(int page, {Duration? duration, Curve? curve}) => (widget.pageController ?? _pageController!)
+      .animateToPage(page, duration: duration ?? widget.pageTransitionDuration, curve: curve ?? widget.pageTransitionCurve);
 
   /// Returns current page number.
   ///
@@ -727,7 +706,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     if (date.isBefore(_minDate) || date.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    _pageController.jumpToPage(_minDate.getDayDifference(date));
+    (widget.pageController ?? _pageController)?.jumpToPage(_minDate.getDayDifference(date));
   }
 
   /// Animate to page which gives day calendar for [date].
@@ -737,12 +716,11 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// respectively.
   ///
   ///
-  Future<void> animateToDate(DateTime date,
-      {Duration? duration, Curve? curve}) async {
+  Future<void> animateToDate(DateTime date, {Duration? duration, Curve? curve}) async {
     if (date.isBefore(_minDate) || date.isAfter(_maxDate)) {
       throw "Invalid date selected.";
     }
-    await _pageController.animateToPage(
+    await (widget.pageController ?? _pageController)?.animateToPage(
       _minDate.getDayDifference(date),
       duration: duration ?? widget.pageTransitionDuration,
       curve: curve ?? widget.pageTransitionCurve,
@@ -776,8 +754,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   /// scroll to event tile.
   ///
   ///
-  Future<void> animateToEvent(CalendarEventData<T> event,
-      {Duration? duration, Curve? curve}) async {
+  Future<void> animateToEvent(CalendarEventData<T> event, {Duration? duration, Curve? curve}) async {
     await animateToDate(event.date, duration: duration, curve: curve);
     await _scrollConfiguration.setScrollEvent(
       event: event,
@@ -797,8 +774,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
 
     // Added ternary condition below to take care if user passing duration
     // above 24 hrs then we take it max as 24 hours only
-    final offset = offSetForSingleMinute *
-        (startDurationInMinutes > 3600 ? 3600 : startDurationInMinutes);
+    final offset = offSetForSingleMinute * (startDurationInMinutes > 3600 ? 3600 : startDurationInMinutes);
     debugPrint("offSet $offset");
     _scrollController.animateTo(
       offset.toDouble(),
@@ -821,6 +797,5 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
   }
 
   /// Returns the current visible date in day view.
-  DateTime get currentDate =>
-      DateTime(_currentDate.year, _currentDate.month, _currentDate.day);
+  DateTime get currentDate => DateTime(_currentDate.year, _currentDate.month, _currentDate.day);
 }
