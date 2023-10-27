@@ -186,6 +186,10 @@ class DayView<T extends Object?> extends StatefulWidget {
 
   final bool showHalfHours;
 
+  final int startHour;
+
+  final int endHour;
+
   /// Duration from where default day view will be visible
   /// By default it will be Duration(hours:0)
   final Duration startDuration;
@@ -229,6 +233,8 @@ class DayView<T extends Object?> extends StatefulWidget {
     this.pageViewPhysics,
     this.dayDetectorBuilder,
     this.showHalfHours = false,
+    this.startHour = 0,
+    this.endHour = 24,
     this.halfHourIndicatorSettings,
     this.startDuration = const Duration(hours: 0),
   })  : assert(timeLineOffset >= 0, "timeLineOffset must be greater than or equal to 0"),
@@ -486,7 +492,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
 
   void _calculateHeights() {
     _hourHeight = widget.heightPerMinute * 60;
-    _height = _hourHeight * Constants.hoursADay;
+    _height = _hourHeight * (widget.endHour - widget.startHour);
   }
 
   void _assignBuilders() {
@@ -547,7 +553,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
       width: width,
       child: Stack(
         children: [
-          for (int i = 0; i < slots; i++)
+          for (int i = widget.startHour; i < widget.endHour; i++)
             Positioned(
               top: heightPerSlot * i,
               left: 0,
