@@ -518,7 +518,6 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
   void _calculateHeights() {
     _hourHeight = widget.heightPerMinute * 60;
     _height = _hourHeight * (widget.endHour - widget.startHour);
-    _height = _hourHeight * Constants.hoursADay;
   }
 
   void _assignBuilders() {
