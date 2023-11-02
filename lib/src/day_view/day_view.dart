@@ -553,7 +553,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
       width: width,
       child: Stack(
         children: [
-          for (int i = widget.startHour; i < widget.endHour; i++)
+          for (int i = widget.startHour; i <= widget.endHour; i++)
             Positioned(
               top: heightPerSlot * i,
               left: 0,
