@@ -100,36 +100,39 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
 
   final ScrollController scrollController;
 
+  final int startHour;
+
   /// Defines a single day page.
-  const InternalDayViewPage({
-    Key? key,
-    required this.showVerticalLine,
-    required this.width,
-    required this.date,
-    required this.eventTileBuilder,
-    required this.controller,
-    required this.timeLineBuilder,
-    required this.hourIndicatorSettings,
-    required this.showLiveLine,
-    required this.liveTimeIndicatorSettings,
-    required this.heightPerMinute,
-    required this.timeLineWidth,
-    required this.timeLineOffset,
-    required this.height,
-    required this.hourHeight,
-    required this.eventArranger,
-    required this.verticalLineOffset,
-    required this.onTileTap,
-    required this.onDateLongPress,
-    required this.onDateTap,
-    required this.minuteSlotSize,
-    required this.scrollNotifier,
-    required this.fullDayEventBuilder,
-    required this.scrollController,
-    required this.dayDetectorBuilder,
-    required this.showHalfHours,
-    required this.halfHourIndicatorSettings,
-  }) : super(key: key);
+  const InternalDayViewPage(
+      {Key? key,
+      required this.showVerticalLine,
+      required this.width,
+      required this.date,
+      required this.eventTileBuilder,
+      required this.controller,
+      required this.timeLineBuilder,
+      required this.hourIndicatorSettings,
+      required this.showLiveLine,
+      required this.liveTimeIndicatorSettings,
+      required this.heightPerMinute,
+      required this.timeLineWidth,
+      required this.timeLineOffset,
+      required this.height,
+      required this.hourHeight,
+      required this.eventArranger,
+      required this.verticalLineOffset,
+      required this.onTileTap,
+      required this.onDateLongPress,
+      required this.onDateTap,
+      required this.minuteSlotSize,
+      required this.scrollNotifier,
+      required this.fullDayEventBuilder,
+      required this.scrollController,
+      required this.dayDetectorBuilder,
+      required this.showHalfHours,
+      required this.halfHourIndicatorSettings,
+      this.startHour = 0})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -139,9 +142,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
       width: width,
       child: Column(
         children: [
-          fullDayEventList.isEmpty
-              ? SizedBox.shrink()
-              : fullDayEventBuilder(fullDayEventList, date),
+          fullDayEventList.isEmpty ? SizedBox.shrink() : fullDayEventBuilder(fullDayEventList, date),
           Expanded(
             child: SingleChildScrollView(
               controller: scrollController,
@@ -170,13 +171,11 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                         painter: HalfHourLinePainter(
                           lineColor: halfHourIndicatorSettings.color,
                           lineHeight: halfHourIndicatorSettings.height,
-                          offset:
-                              timeLineWidth + halfHourIndicatorSettings.offset,
+                          offset: timeLineWidth + halfHourIndicatorSettings.offset,
                           minuteHeight: heightPerMinute,
                           lineStyle: halfHourIndicatorSettings.lineStyle,
                           dashWidth: halfHourIndicatorSettings.dashWidth,
-                          dashSpaceWidth:
-                              halfHourIndicatorSettings.dashSpaceWidth,
+                          dashSpaceWidth: halfHourIndicatorSettings.dashSpaceWidth,
                         ),
                       ),
                     dayDetectorBuilder(
@@ -197,10 +196,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                         heightPerMinute: heightPerMinute,
                         eventTileBuilder: eventTileBuilder,
                         scrollNotifier: scrollNotifier,
-                        width: width -
-                            timeLineWidth -
-                            hourIndicatorSettings.offset -
-                            verticalLineOffset,
+                        width: width - timeLineWidth - hourIndicatorSettings.offset - verticalLineOffset,
                       ),
                     ),
                     TimeLine(
@@ -216,6 +212,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                       IgnorePointer(
                         child: LiveTimeIndicator(
                           liveTimeIndicatorSettings: liveTimeIndicatorSettings,
+                          startHour: startHour,
                           width: width,
                           height: height,
                           heightPerMinute: heightPerMinute,

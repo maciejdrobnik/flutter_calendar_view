@@ -35,6 +35,8 @@ class LiveTimeIndicator extends StatefulWidget {
   /// Defines height occupied by one minute.
   final double heightPerMinute;
 
+  final int startHour;
+
   /// Widget to display tile line according to current time.
   const LiveTimeIndicator(
       {Key? key,
@@ -42,6 +44,7 @@ class LiveTimeIndicator extends StatefulWidget {
       required this.height,
       required this.timeLineWidth,
       required this.liveTimeIndicatorSettings,
+      this.startHour = 0,
       required this.heightPerMinute})
       : super(key: key);
 
@@ -88,7 +91,7 @@ class _LiveTimeIndicatorState extends State<LiveTimeIndicator> {
         height: widget.liveTimeIndicatorSettings.height,
         offset: Offset(
           widget.timeLineWidth + widget.liveTimeIndicatorSettings.offset,
-          _currentDate.getTotalMinutes * widget.heightPerMinute,
+          _currentDate.getTotalMinutesFromStartHour(widget.startHour) * widget.heightPerMinute,
         ),
       ),
     );
@@ -152,8 +155,7 @@ class TimeLine extends StatelessWidget {
             for (int i = 0; i < Constants.hoursADay; i++)
               _timelinePositioned(
                 topPosition: hourHeight * i - timeLineOffset + _halfHourHeight,
-                bottomPosition:
-                    height - (hourHeight * (i + 1)) + timeLineOffset,
+                bottomPosition: height - (hourHeight * (i + 1)) + timeLineOffset,
                 hour: i,
                 minutes: 30,
               ),
@@ -252,20 +254,14 @@ class EventGenerator<T extends Object?> extends StatelessWidget {
         child: GestureDetector(
           onTap: () => onTileTap?.call(events[index].events, date),
           child: Builder(builder: (context) {
-            if (scrollNotifier.shouldScroll &&
-                events[index]
-                    .events
-                    .any((element) => element == scrollNotifier.event)) {
+            if (scrollNotifier.shouldScroll && events[index].events.any((element) => element == scrollNotifier.event)) {
               _scrollToEvent(context);
             }
             return eventTileBuilder(
               date,
               events[index].events,
               Rect.fromLTWH(
-                  events[index].left,
-                  events[index].top,
-                  width - events[index].right - events[index].left,
-                  height - events[index].bottom - events[index].top),
+                  events[index].left, events[index].top, width - events[index].right - events[index].left, height - events[index].bottom - events[index].top),
               events[index].startDuration,
               events[index].endDuration,
             );

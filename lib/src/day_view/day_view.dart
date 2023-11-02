@@ -405,6 +405,7 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
                             eventTileBuilder: _eventTileBuilder,
                             heightPerMinute: widget.heightPerMinute,
                             hourIndicatorSettings: _hourIndicatorSettings,
+                            startHour: widget.startHour,
                             date: date,
                             onTileTap: widget.onEventTap,
                             onDateLongPress: widget.onDateLongPress,
