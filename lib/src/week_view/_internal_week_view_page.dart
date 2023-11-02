@@ -111,6 +111,8 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
   /// Display full day events.
   final FullDayEventBuilder<T> fullDayEventBuilder;
 
+  final int startHour;
+
   /// A single page for week view.
   const InternalWeekViewPage({
     Key? key,
@@ -143,6 +145,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
     required this.scrollConfiguration,
     required this.fullDayEventBuilder,
     required this.weekDetectorBuilder,
+    this.startHour = 0,
   }) : super(key: key);
 
   @override
@@ -190,8 +193,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                 ...List.generate(
                   filteredDates.length,
                   (index) {
-                    final fullDayEventList =
-                        controller.getFullDayEvent(filteredDates[index]);
+                    final fullDayEventList = controller.getFullDayEvent(filteredDates[index]);
                     return fullDayEventList.isEmpty
                         ? SizedBox.shrink()
                         : SizedBox(
@@ -230,6 +232,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                         liveTimeIndicatorSettings: liveTimeIndicatorSettings,
                         width: width,
                         height: height,
+                        startHour: startHour,
                         heightPerMinute: heightPerMinute,
                         timeLineWidth: timeLineWidth,
                       ),
@@ -270,8 +273,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                                       eventArranger: eventArranger,
                                       eventTileBuilder: eventTileBuilder,
                                       scrollNotifier: scrollConfiguration,
-                                      events: controller
-                                          .getEventsOnDay(filteredDates[index]),
+                                      events: controller.getEventsOnDay(filteredDates[index]),
                                       heightPerMinute: heightPerMinute,
                                     ),
                                   ],

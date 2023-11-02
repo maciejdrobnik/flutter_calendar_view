@@ -413,6 +413,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
                             key: ValueKey(_hourHeight.toString() + dates[0].toString()),
                             height: _height,
                             width: _width,
+                            startHour: widget.startHour,
                             weekTitleWidth: _weekTitleWidth,
                             weekTitleHeight: widget.weekTitleHeight,
                             weekDayBuilder: _weekDayBuilder,
