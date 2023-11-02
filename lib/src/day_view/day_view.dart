@@ -546,7 +546,6 @@ class DayViewState<T extends Object?> extends State<DayView<T>> {
     required MinuteSlotSize minuteSlotSize,
   }) {
     final heightPerSlot = minuteSlotSize.minutes * heightPerMinute;
-    final slots = (Constants.hoursADay * 60) ~/ minuteSlotSize.minutes;
 
     return Container(
       height: height,

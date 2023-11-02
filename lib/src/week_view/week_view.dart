@@ -192,6 +192,10 @@ class WeekView<T extends Object?> extends StatefulWidget {
   /// Display full day event builder.
   final FullDayEventBuilder<T>? fullDayEventBuilder;
 
+  final int startHour;
+
+  final int endHour;
+
   /// Main widget for week view.
   const WeekView({
     Key? key,
@@ -236,6 +240,8 @@ class WeekView<T extends Object?> extends StatefulWidget {
     this.headerStyle = const HeaderStyle(),
     this.safeAreaOption = const SafeAreaOption(),
     this.fullDayEventBuilder,
+    this.startHour = 0,
+    this.endHour = 24,
   })  : assert((timeLineOffset) >= 0, "timeLineOffset must be greater than or equal to 0"),
         assert(width == null || width > 0, "Calendar width must be greater than 0."),
         assert(timeLineWidth == null || timeLineWidth > 0, "Time line width must be greater than 0."),
@@ -511,6 +517,7 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
 
   void _calculateHeights() {
     _hourHeight = widget.heightPerMinute * 60;
+    _height = _hourHeight * (widget.endHour - widget.startHour);
     _height = _hourHeight * Constants.hoursADay;
   }
 
@@ -578,14 +585,13 @@ class WeekViewState<T extends Object?> extends State<WeekView<T>> {
     required MinuteSlotSize minuteSlotSize,
   }) {
     final heightPerSlot = minuteSlotSize.minutes * heightPerMinute;
-    final slots = (Constants.hoursADay * 60) ~/ minuteSlotSize.minutes;
 
     return Container(
       height: height,
       width: width,
       child: Stack(
         children: [
-          for (int i = 0; i < slots; i++)
+          for (int i = widget.startHour; i < widget.endHour; i++)
             Positioned(
               top: heightPerSlot * i,
               left: 0,
